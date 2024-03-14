@@ -1,5 +1,5 @@
 import { css, cx } from '@emotion/css';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { selectors } from '@grafana/e2e-selectors';
@@ -56,32 +56,21 @@ export const VizLegendListItem = <T = unknown,>({
     [item, onLabelMouseOut]
   );
 
-  const [labelWithUrl, setLabelWithUrl] = useState('');
-  const [urlForLabel, setUrlForLabel] = useState('');
-  const [isUsingUrl, setIsUsingUrl] = useState(false);
-
+  const regex = /\[([^\]]+)\]\((.*?)\)/;
+  const match = item.label.match(regex);
+  const isUsingUrl = match !== null;
+  console.log("isUsingUrl", isUsingUrl);
 
   const onClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
       if (onLabelClick) {
         if(isUsingUrl) {
-          window.location.href = urlForLabel;
+          window.location.href = match[2];
         } else { onLabelClick(item, event); }
       }
     },
-    [item, onLabelClick, isUsingUrl, urlForLabel]
+    [item, onLabelClick, isUsingUrl, match]
   );
-
-  useEffect(() => {
-    const regex = /\[([^\]]+)\]\((.*?)\)/;
-    const match = item.label.match(regex);
-    setIsUsingUrl(match ? true : false);
-    console.log("isUsingUrl", isUsingUrl);
-    if (isUsingUrl && match) {
-      setLabelWithUrl(match[1]);
-      setUrlForLabel(match[2]);
-    }
-  }, [item.label, isUsingUrl, labelWithUrl, urlForLabel]);
 
   return (
     <div
@@ -99,12 +88,13 @@ export const VizLegendListItem = <T = unknown,>({
         onClick={onClick}
         className={styles.label}
       >
-        {isUsingUrl ? labelWithUrl : item.label}
+        {isUsingUrl ? match[1] : item.label}
       </button>
 
       {item.getDisplayValues && <VizLegendStatsList stats={item.getDisplayValues()} />}
     </div>
   );
+
 };
 
 VizLegendListItem.displayName = 'VizLegendListItem';
