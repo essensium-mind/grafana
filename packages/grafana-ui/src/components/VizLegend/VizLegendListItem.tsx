@@ -59,17 +59,21 @@ export const VizLegendListItem = <T = unknown,>({
   const regex = /\[([^\]]+)\]\((.*?)\)/;
   const match = item.label.match(regex);
   const isUsingUrl = match !== null;
-  console.log("isUsingUrl", isUsingUrl);
+  const labelForUrl = isUsingUrl ? match[1] : item.label;
+  const urlForLabel = isUsingUrl ? match[2] : "";
+
 
   const onClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
       if (onLabelClick) {
         if(isUsingUrl) {
-          window.location.href = match[2];
-        } else { onLabelClick(item, event); }
+          window.location.href = urlForLabel;
+        } else {
+          onLabelClick(item, event);
+        }
       }
     },
-    [item, onLabelClick, isUsingUrl, match]
+    [item, onLabelClick, isUsingUrl]
   );
 
   return (
@@ -88,13 +92,12 @@ export const VizLegendListItem = <T = unknown,>({
         onClick={onClick}
         className={styles.label}
       >
-        {isUsingUrl ? match[1] : item.label}
+        {labelForUrl}
       </button>
 
       {item.getDisplayValues && <VizLegendStatsList stats={item.getDisplayValues()} />}
     </div>
   );
-
 };
 
 VizLegendListItem.displayName = 'VizLegendListItem';
