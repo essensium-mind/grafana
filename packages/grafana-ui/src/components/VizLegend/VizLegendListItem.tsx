@@ -59,7 +59,7 @@ export const VizLegendListItem = <T = unknown,>({
   const regex = /\[([^\]]+)\]\((.*?)\)/;
   const match = item.label.match(regex);
   const isUsingUrl = match !== null;
-  const labelForUrl = isUsingUrl ? match[1] : item.label;
+  const labelForUrl = isUsingUrl ? item.label.replace(regex, '$1') : item.label;
   const urlForLabel = isUsingUrl ? match[2] : "";
 
 
