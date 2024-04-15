@@ -50,6 +50,7 @@ func adjustMetricFrame(frame *data.Frame, query *lokiQuery, setFrameName bool) e
 	isMetricRange := query.QueryType == QueryTypeRange
 
 	name := formatName(labels, query)
+	url := formatUrl(labels, query)
 	if setFrameName {
 		frame.Name = name
 	}
@@ -78,6 +79,7 @@ func adjustMetricFrame(frame *data.Frame, query *lokiQuery, setFrameName bool) e
 		valueField.Config = &data.FieldConfig{}
 	}
 	valueField.Config.DisplayNameFromDS = name
+	valueField.Config.UrlFromDS = url
 
 	return nil
 }
@@ -283,17 +285,28 @@ func formatName(labels map[string]string, query *lokiQuery) string {
 		return formatNamePrometheusStyle(labels)
 	}
 
-	result := legendFormat.ReplaceAllFunc([]byte(query.LegendFormat), func(in []byte) []byte {
-		labelName := strings.Replace(string(in), "{{", "", 1)
-		labelName = strings.Replace(labelName, "}}", "", 1)
-		labelName = strings.TrimSpace(labelName)
-		if val, exists := labels[labelName]; exists {
-			return []byte(val)
-		}
-		return []byte{}
-	})
+	return convertLabel(query.LegendFormat, labels)
+}
 
-	return string(result)
+func formatUrl(labels map[string]string, query *lokiQuery) string {
+	return convertLabel(query.LegendUrl, labels)
+}
+
+func convertLabel(label string, labels map[string]string) string {
+	var convertedLabel string
+	if label != "" {
+		result := legendFormat.ReplaceAllFunc([]byte(label), func(in []byte) []byte {
+			labelName := strings.Replace(string(in), "{{", "", 1)
+			labelName = strings.Replace(labelName, "}}", "", 1)
+			labelName = strings.TrimSpace(labelName)
+			if val, exists := labels[labelName]; exists {
+				return []byte(val)
+			}
+			return []byte{}
+		})
+		convertedLabel = string(result)
+	}
+	return convertedLabel
 }
 
 func getFrameLabels(frame *data.Frame) map[string]string {

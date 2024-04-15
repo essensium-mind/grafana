@@ -12,6 +12,8 @@ import { QueryOptionGroup } from '../shared/QueryOptionGroup';
 
 import { FORMAT_OPTIONS, INTERVAL_FACTOR_OPTIONS } from './PromQueryEditorSelector';
 import { getLegendModeLabel, PromQueryLegendEditor } from './PromQueryLegendEditor';
+import { PromQueryLegendUrlEditor } from './PromQueryLegendUrlEditor';
+
 
 export interface UIOptions {
   exemplars: boolean;
@@ -19,6 +21,7 @@ export interface UIOptions {
   format: boolean;
   minStep: boolean;
   legend: boolean;
+  legendUrl: boolean;
   resolution: boolean;
 }
 
@@ -72,6 +75,11 @@ export const PromQueryBuilderOptions = React.memo<Props>(({ query, app, onChange
             onChange={(legendFormat) => onChange({ ...query, legendFormat })}
             onRunQuery={onRunQuery}
           />
+            <PromQueryLegendUrlEditor
+              legendUrl={query.legendUrl}
+              onChange={(legendUrl) => onChange({ ...query, legendUrl })}
+              onRunQuery={onRunQuery}
+            />
           <EditorField
             label="Min step"
             tooltip={
@@ -144,7 +152,15 @@ function getQueryTypeValue(query: PromQuery) {
 function getCollapsedInfo(query: PromQuery, formatOption: string, queryType: string, app?: CoreApp): string[] {
   const items: string[] = [];
 
+  let legendUrl = query.legendUrl;
+  
+  if (typeof legendUrl === 'string' && legendUrl.length > 10) {
+      legendUrl = legendUrl.slice(0, 10) + "...";
+  }
+
   items.push(`Legend: ${getLegendModeLabel(query.legendFormat)}`);
+  console.log('"' + legendUrl + '"')
+  items.push(`URL: ${legendUrl?.length === 0 ? "None" : legendUrl}`);
   items.push(`Format: ${formatOption}`);
   items.push(`Step: ${query.interval ?? 'auto'}`);
   items.push(`Type: ${queryType}`);

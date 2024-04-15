@@ -52,6 +52,10 @@ export const LokiQueryBuilderOptions = React.memo<Props>(
       onChange({ ...query, legendFormat: evt.currentTarget.value });
       onRunQuery();
     };
+    const onLegendUrlChanged = (evt: React.FormEvent<HTMLInputElement>) => {
+      onChange({ ...query, legendUrl: evt.currentTarget.value });
+      onRunQuery();
+    };
 
     function onMaxLinesChange(e: React.SyntheticEvent<HTMLInputElement>) {
       const newMaxLines = preprocessMaxLines(e.currentTarget.value);
@@ -93,6 +97,18 @@ export const LokiQueryBuilderOptions = React.memo<Props>(
               minWidth={14}
               defaultValue={query.legendFormat}
               onCommitChange={onLegendFormatChanged}
+            />
+          </EditorField>
+          <EditorField
+            label="Legend URL"
+            tooltip="If the url is set, the label in the legend will become clickable, you can use variables similar to Legend Label."
+            >
+            <AutoSizeInput
+              placeholder="/your/{{example}}/url"
+              type="string"
+              minWidth={14}
+              defaultValue={query.legendUrl}
+              onCommitChange={onLegendUrlChanged}
             />
           </EditorField>
           <EditorField label="Type">
@@ -183,6 +199,16 @@ function getCollapsedInfo(
 
   if (query.legendFormat) {
     items.push(`Legend: ${query.legendFormat}`);
+  }
+
+  if (query.legendUrl) {
+    let legendUrl = query.legendUrl;
+
+    if (typeof legendUrl === 'string' && legendUrl.length > 10) {
+      legendUrl = legendUrl.slice(0, 10) + "...";
+    }
+
+    items.push(`URL: ${legendUrl?.length === 0 ? "None" : legendUrl}`);
   }
 
   items.push(`Type: ${queryTypeLabel?.label}`);

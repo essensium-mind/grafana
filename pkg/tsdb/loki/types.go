@@ -35,6 +35,7 @@ type lokiQuery struct {
 	Step                time.Duration
 	MaxLines            int
 	LegendFormat        string
+	LegendUrl           string
 	Start               time.Time
 	End                 time.Time
 	RefID               string

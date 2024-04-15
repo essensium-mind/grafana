@@ -116,10 +116,11 @@ func addMetadataToMultiFrame(q *models.Query, frame *data.Frame, enableDataplane
 	frame.Fields[0].Config = &data.FieldConfig{Interval: float64(q.Step.Milliseconds())}
 
 	customName := getName(q, frame.Fields[1])
-	if customName != "" {
-		frame.Fields[1].Config = &data.FieldConfig{DisplayNameFromDS: customName}
-	}
+	labelUrl := getUrl(q, frame.Fields[1])
 
+	if customName != "" {
+		frame.Fields[1].Config = &data.FieldConfig{DisplayNameFromDS: customName, UrlFromDS: labelUrl}
+	}
 	if enableDataplane {
 		valueField := frame.Fields[1]
 		if n, ok := valueField.Labels["__name__"]; ok {
@@ -169,17 +170,8 @@ func getName(q *models.Query, field *data.Field) string {
 		if len(labels) > 0 {
 			legend = ""
 		}
-	} else if q.LegendFormat != "" {
-		result := legendFormatRegexp.ReplaceAllFunc([]byte(q.LegendFormat), func(in []byte) []byte {
-			labelName := strings.Replace(string(in), "{{", "", 1)
-			labelName = strings.Replace(labelName, "}}", "", 1)
-			labelName = strings.TrimSpace(labelName)
-			if val, exists := labels[labelName]; exists {
-				return []byte(val)
-			}
-			return []byte{}
-		})
-		legend = string(result)
+	} else {
+		legend = convertLabel(q.LegendFormat, field)
 	}
 
 	// If legend is empty brackets, use query expression
@@ -188,6 +180,28 @@ func getName(q *models.Query, field *data.Field) string {
 	}
 
 	return legend
+}
+
+func getUrl(q *models.Query, field *data.Field) string {
+	return convertLabel(q.LegendUrl, field)
+}
+
+func convertLabel(label string, field *data.Field) string {
+	var convertedLabel string
+	labels := field.Labels
+	if label != "" {
+		result := legendFormatRegexp.ReplaceAllFunc([]byte(label), func(in []byte) []byte {
+			labelName := strings.Replace(string(in), "{{", "", 1)
+			labelName = strings.Replace(labelName, "}}", "", 1)
+			labelName = strings.TrimSpace(labelName)
+			if val, exists := labels[labelName]; exists {
+				return []byte(val)
+			}
+			return []byte{}
+		})
+		convertedLabel = string(result)
+	}
+	return convertedLabel
 }
 
 func isExemplarFrame(frame *data.Frame) bool {
